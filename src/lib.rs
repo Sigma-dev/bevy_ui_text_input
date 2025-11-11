@@ -276,6 +276,23 @@ impl TextInputMode {
     }
 }
 
+#[derive(Component)]
+pub enum TextInputModifier {
+    // All characters are converted to uppercase
+    AllCaps,
+    // Custom modifier
+    Custom(Box<dyn Fn(&char) -> char + Send + Sync>),
+}
+
+impl TextInputModifier {
+    pub fn apply(&self, ch: &char) -> char {
+        match self {
+            TextInputModifier::AllCaps => ch.to_ascii_uppercase(),
+            TextInputModifier::Custom(modifier) => modifier(ch),
+        }
+    }
+}
+
 #[derive(Component, Debug)]
 pub struct TextInputBuffer {
     pub editor: Editor<'static>,

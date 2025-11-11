@@ -9,6 +9,7 @@ use cosmic_text::Selection;
 
 use crate::ModifyText;
 use crate::TextInputFilter;
+use crate::TextInputModifier;
 use crate::clipboard::ClipboardRead;
 use crate::edit::apply_action;
 use crate::edit::apply_motion;
@@ -88,6 +89,7 @@ fn apply_text_input_edit(
     changes: &mut cosmic_undo_2::Commands<cosmic_text::Change>,
     max_chars: Option<usize>,
     filter_mode: Option<&TextInputFilter>,
+    modifier: Option<&TextInputModifier>,
 ) -> Option<String> {
     editor.start_change();
 
@@ -98,7 +100,10 @@ fn apply_text_input_edit(
         TextInputEdit::Escape => {
             editor.action(Action::Escape);
         }
-        TextInputEdit::Insert(ch, overwrite) => {
+        TextInputEdit::Insert(mut ch, overwrite) => {
+            if let Some(modifier) = modifier {
+                ch = modifier.apply(&ch);
+            }
             if editor.selection() != Selection::None {
                 editor.action(Action::Insert(ch));
             } else if overwrite && !cursor_at_line_end(editor) {
@@ -202,8 +207,9 @@ pub fn apply_text_input_edit_and_trigger_observers(
     changes: &mut cosmic_undo_2::Commands<cosmic_text::Change>,
     max_chars: Option<usize>,
     filter_mode: Option<&TextInputFilter>,
+    modifier: Option<&TextInputModifier>,
 ) {
-    let text = apply_text_input_edit(edit, editor, changes, max_chars, filter_mode);
+    let text = apply_text_input_edit(edit, editor, changes, max_chars, filter_mode, modifier);
     if let Some(text) = text {
         commands
             .entity(entity)
