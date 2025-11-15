@@ -32,7 +32,9 @@ use bevy::text::{GlyphAtlasInfo, TextFont};
 use bevy::text::{Justify, TextColor};
 use bevy::ui::{Node, UiSystems};
 use bevy::ui_render::{RenderUiSystems, extract_text_sections};
-use cosmic_text::{Buffer, Change, Edit, Editor, Metrics, Wrap};
+use cosmic_text::{
+    Attrs, AttrsList, Buffer, BufferLine, Change, Edit, Editor, LineEnding, Metrics, Shaping, Wrap,
+};
 use edit::{
     cursor_blink_system, mouse_wheel_scroll, on_drag_text_input, on_focused_keyboard_input,
     on_move_clear_multi_click, on_multi_click_set_selection, on_text_input_pressed,
@@ -304,6 +306,18 @@ pub struct TextInputBuffer {
 }
 
 impl TextInputBuffer {
+    pub fn new(text: impl Into<String>) -> Self {
+        let mut default = Self::default();
+        default.editor.with_buffer_mut(|buffer| {
+            buffer.lines.push(BufferLine::new(
+                text,
+                LineEnding::default(),
+                AttrsList::new(&Attrs::new()),
+                Shaping::Advanced,
+            ));
+        });
+        default
+    }
     pub fn get_text(&self) -> String {
         self.editor.with_buffer(get_text)
     }
